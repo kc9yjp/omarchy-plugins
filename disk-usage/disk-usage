@@ -1,0 +1,31 @@
+#!/bin/bash
+# Disk used/free bar widget for Omarchy.
+# Prints Waybar-style JSON: { text, tooltip, class }
+#
+# Mount point defaults to / but can be overridden:
+#   DISK_USAGE_MOUNT=/home ~/.config/omarchy/bar/scripts/disk-usage
+
+mount="${DISK_USAGE_MOUNT:-/}"
+icon="󰋊"
+
+read -r fs size used avail pct target < <(df -h --output=source,size,used,avail,pcent,target "$mount" | tail -1)
+
+if [[ -z "$pct" ]]; then
+  echo '{"text":"'"$icon"' disk","tooltip":"disk-usage: could not read '"$mount"'","class":"active"}'
+  exit 0
+fi
+
+pct_num="${pct%\%}"
+
+class="normal"
+(( pct_num >= 90 )) && class="active"
+
+# Icon-only below 80% used; show the free-space figure once space is tight.
+text="$icon"
+(( pct_num >= 80 )) && text="${icon} ${avail}"
+
+stats="${used} used / ${size} total (${pct} used, ${avail} free)"
+target_display="${target#/}"
+tooltip="${target_display:+$target_display  }${stats}"
+
+printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' "$text" "$tooltip" "$class"
