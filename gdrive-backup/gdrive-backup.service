@@ -1,0 +1,9 @@
+[Unit]
+Description=Mirror home directory to Google Drive (gdrive-backup)
+
+[Service]
+Type=oneshot
+EnvironmentFile=-%h/.config/omarchy/bar/scripts/gdrive-backup.env
+ExecStart=%h/.config/omarchy/bar/scripts/gdrive-backup-sync
+Nice=10
+IOSchedulingClass=idle

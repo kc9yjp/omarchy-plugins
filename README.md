@@ -24,6 +24,9 @@ hot-reload) — no separate copy step.
 
 - [`disk-usage`](disk-usage/) — bar widget showing disk used/free space,
   hidden until usage crosses 80%, accent-colored above 90%.
+- [`gdrive-backup`](gdrive-backup/) — hourly `rclone` mirror of the home
+  directory to Google Drive, with a bar widget showing sync status
+  (up to date / syncing / stale / error) and click-to-sync-now.
 
 ## Adding a new plugin
 

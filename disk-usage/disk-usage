@@ -28,4 +28,4 @@ stats="${used} used / ${size} total (${pct} used, ${avail} free)"
 target_display="${target#/}"
 tooltip="${target_display:+$target_display  }${stats}"
 
-printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' "$text" "$tooltip" "$class"
+printf '{"text":"%s","tooltip":"%s","class":"%s"}' "$text" "$tooltip" "$class"

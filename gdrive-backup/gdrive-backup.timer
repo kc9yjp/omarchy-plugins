@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly Google Drive backup (gdrive-backup)
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

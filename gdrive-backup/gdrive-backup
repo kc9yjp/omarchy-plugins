@@ -1,0 +1,89 @@
+#!/bin/bash
+# Google Drive backup status widget for the Omarchy bar.
+# Prints Waybar-style JSON: { text, tooltip, class }
+#
+# Reads state written by gdrive-backup-sync (run on a timer, or manually via
+# this widget's onClick). Never runs a sync itself.
+#
+#   GDRIVE_BACKUP_STALE_SECS=10800 ~/.config/omarchy/bar/scripts/gdrive-backup
+
+icon=""
+stale_secs="${GDRIVE_BACKUP_STALE_SECS:-10800}" # 3h — hourly timer + slack
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/gdrive-backup"
+status_file="$state_dir/status.json"
+lockfile="$state_dir/sync.lock"
+live_log="$state_dir/current-run.log"
+
+human_ago() {
+  local secs=$1
+  if ((secs < 60)); then echo "just now"
+  elif ((secs < 3600)); then echo "$((secs / 60))m ago"
+  elif ((secs < 86400)); then echo "$((secs / 3600))h ago"
+  else echo "$((secs / 86400))d ago"
+  fi
+}
+
+# Same quote/backslash/newline scrub as gdrive-backup-sync's sanitize() —
+# this reads rclone's live log directly, so it needs the same treatment
+# before landing in a hand-parsed JSON string.
+sanitize() {
+  local s="$1"
+  s="${s//$'\n'/ }"
+  s="${s//\"/\'}"
+  s="${s//\\/}"
+  printf '%s' "$s"
+}
+
+# A sync currently holds the lock — report progress without touching it.
+if [[ -e "$lockfile" ]]; then
+  exec 201>"$lockfile"
+  if ! flock -n 201; then
+    progress=""
+    if [[ -f "$live_log" ]]; then
+      progress=$(tail -n 5 "$live_log" 2>/dev/null | grep '%' | tail -n 1 | sed -E 's#^[0-9/]+ [0-9:]+ [A-Z]+ *: *##')
+      progress="$(sanitize "$progress")"
+    fi
+    pct=$(grep -oE '[0-9]+%' <<<"$progress" | tail -n 1)
+    text="$icon"
+    [[ -n "$pct" ]] && text="$icon $pct"
+    tooltip="gdrive-backup: syncing…"
+    [[ -n "$progress" ]] && tooltip="gdrive-backup: syncing — $progress"
+    printf '{"text":"%s","tooltip":"%s","class":"normal"}' "$text" "$tooltip"
+    exit 0
+  fi
+  flock -u 201
+fi
+
+if [[ ! -f "$status_file" ]]; then
+  printf '{"text":"%s waiting","tooltip":"gdrive-backup: not synced yet — click to run the first sync","class":"active"}' "$icon"
+  exit 0
+fi
+
+status=$(grep -o '"status":"[a-z]*"' "$status_file" | cut -d'"' -f4)
+last_success=$(grep -o '"last_success_epoch":[0-9]*' "$status_file" | grep -o '[0-9]*')
+message=$(grep -o '"message":"[^"]*"' "$status_file" | cut -d'"' -f4)
+remote=$(grep -o '"remote":"[^"]*"' "$status_file" | cut -d'"' -f4)
+now=$(date +%s)
+
+if [[ "$status" == "error" ]]; then
+  tooltip="gdrive-backup: last sync FAILED — ${message:-see last-run.log}"
+  [[ -n "$last_success" ]] && tooltip+=" (last success: $(human_ago $((now - last_success))))"
+  printf '{"text":"%s error","tooltip":"%s","class":"active"}' "$icon" "$tooltip"
+  exit 0
+fi
+
+if [[ -z "$last_success" ]]; then
+  printf '{"text":"%s waiting","tooltip":"gdrive-backup: no successful sync yet","class":"active"}' "$icon"
+  exit 0
+fi
+
+age=$((now - last_success))
+tooltip="gdrive-backup: synced to ${remote:-gdrive-boss:home-backup/$(hostname)} — $(human_ago "$age")"
+[[ -n "$message" ]] && tooltip+=" ($message)"
+
+if ((age > stale_secs)); then
+  printf '{"text":"%s stale","tooltip":"%s — timer may not be running","class":"active"}' "$icon" "$tooltip"
+else
+  printf '{"text":"%s","tooltip":"%s","class":"normal"}' "$icon" "$tooltip"
+fi
