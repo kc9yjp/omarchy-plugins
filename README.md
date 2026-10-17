@@ -55,10 +55,10 @@ restored `~/.config/omarchy/bar/scripts/*` symlinks are absolute paths into
 
 3. **Pull the old machine's configs down.** Backups live under
    `home-backup/<hostname>`. List them with `rclone lsd gdrive-boss:home-backup`
-   (the original machine is `veronica69`):
+   and use the old machine's hostname:
 
    ```bash
-   rclone copy gdrive-boss:home-backup/veronica69/.dotfiles ~/.dotfiles
+   rclone copy gdrive-boss:home-backup/<old-hostname>/.dotfiles ~/.dotfiles
    ```
 
 4. **Install omadot and stow:** `~/Work/omarchy-plugins/omadot/install.sh`
