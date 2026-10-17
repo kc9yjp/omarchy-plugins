@@ -31,6 +31,10 @@
 - /.*
 - /.*/**
 
+# oma-setup is a local-only repo (never pushed), so this backup is its only
+# copy of the git history. Must come before the .git exclusion below.
++ /Work/oma-setup/.git/**
+
 # Regenerable build/dependency junk, wherever it turns up in the tree
 - .git/**
 - node_modules/**
