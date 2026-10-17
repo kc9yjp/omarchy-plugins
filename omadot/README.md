@@ -13,12 +13,12 @@ git repo if you want history.
 ## Install
 
 ```bash
-sudo pacman -S --needed stow
 ./install.sh
 ```
 
 `install.sh` downloads the omadot script, pinned to a reviewed upstream
-commit, into `~/.local/bin/omadot`. Upstream ships no license, so the
+commit, into `~/.local/bin/omadot`, and installs `stow` with pacman if
+it's missing (that step prompts for sudo). Upstream ships no license, so the
 script isn't vendored here. To upgrade, read the upstream diff, then bump
 `OMADOT_COMMIT` in `install.sh` and rerun it.
 

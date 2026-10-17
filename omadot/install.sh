@@ -4,7 +4,7 @@
 #   - downloads the omadot script, pinned to a reviewed commit, into
 #     ~/.local/bin (no sudo — unlike upstream's installer, which uses
 #     /usr/local/bin)
-#   - checks that GNU Stow is installed
+#   - installs GNU Stow via pacman if missing (prompts for sudo)
 #
 # Not vendored into this repo: upstream ships no license file.
 #
@@ -27,13 +27,8 @@ install -m 755 "$tmp" "$dest"
 echo "Installed omadot ($OMADOT_COMMIT) to $dest"
 
 if ! command -v stow &>/dev/null; then
-  cat <<'EOF'
-
-WARNING: GNU Stow is not installed — `omadot put` needs it. Install with:
-
-  sudo pacman -S --needed stow
-
-EOF
+  echo "Installing GNU Stow (needed by \`omadot put\`)"
+  sudo pacman -S --needed --noconfirm stow
 fi
 
 cat <<'EOF'
