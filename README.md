@@ -27,6 +27,9 @@ hot-reload) — no separate copy step.
 - [`gdrive-backup`](gdrive-backup/) — hourly `rclone` mirror of the home
   directory to Google Drive, with a bar widget showing sync status
   (up to date / syncing / stale / error) and click-to-sync-now.
+- [`omadot`](omadot/) — installs omadot (GNU Stow wrapper) to manage
+  configs as per-app packages in `~/.dotfiles`, backed up by
+  `gdrive-backup` and restorable one at a time on another machine.
 
 ## Adding a new plugin
 

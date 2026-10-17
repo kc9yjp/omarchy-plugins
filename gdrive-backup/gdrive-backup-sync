@@ -23,41 +23,21 @@ source_dir="${GDRIVE_BACKUP_SOURCE:-$HOME}"
 # Namespaced by hostname so multiple machines can share one Drive remote
 # without overwriting each other's backup.
 remote="${GDRIVE_BACKUP_REMOTE:-gdrive-boss:home-backup/$(hostname)}"
+# Despite the name (kept for backwards compatibility), this is a full rclone
+# filter file (+/- rules), not a plain exclude list — it carves specific
+# dotdirs back in out of the blanket dotfile exclusion. See the file itself.
 exclude_file="${GDRIVE_BACKUP_EXCLUDE:-$plugin_dir/gdrive-backup.exclude}"
 
 lockfile="$state_dir/sync.lock"
 status_file="$state_dir/status.json"
 log_file="$state_dir/last-run.log"
 live_log="$state_dir/current-run.log" # progress while a run is in flight; read by the widget
-git_info_name=".gdrive-backup-git-info"
 
 exec 200>"$lockfile"
 if ! flock -n 200; then
   echo "gdrive-backup: sync already in progress, skipping this run" >>"$log_file"
   exit 0
 fi
-
-# Stamp every git repo under the source tree with its origin remote and
-# current branch. The exclude list drops .git/** (history isn't worth
-# mirroring), so this small file is the only record of what a project
-# directory was, once it's restored from a bare working-tree copy.
-stamp_git_repos() {
-  local gitdir repo_dir remote branch info_file
-  while IFS= read -r -d '' gitdir; do
-    repo_dir="$(dirname "$gitdir")"
-    remote="$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)"
-    branch="$(git -C "$repo_dir" branch --show-current 2>/dev/null || true)"
-    [[ -z "$remote" && -z "$branch" ]] && continue
-    info_file="$repo_dir/$git_info_name"
-    printf 'remote: %s\nbranch: %s\n' "$remote" "$branch" >"$info_file" 2>/dev/null
-    # Keep it out of `git status` without touching the repo's own .gitignore.
-    grep -qxF "$git_info_name" "$gitdir/info/exclude" 2>/dev/null \
-      || echo "$git_info_name" >>"$gitdir/info/exclude" 2>/dev/null
-  done < <(find "$source_dir" \
-    \( -name node_modules -o -name venv -o -name __pycache__ -o -name .cache \) -prune \
-    -o -type d -name .git -print0 2>/dev/null)
-}
-stamp_git_repos
 
 # Both this script and the widget's own status-file reader are hand-rolled
 # (no jq dependency, matching the rest of this repo), so the message can't
@@ -76,7 +56,7 @@ sanitize() {
 # can tail it for progress while a long sync is still running.
 : >"$live_log"
 rclone sync "$source_dir" "$remote" \
-    --exclude-from "$exclude_file" \
+    --filter-from "$exclude_file" \
     --stats 5s --stats-one-line -v >>"$live_log" 2>&1
 rclone_exit=$?
 

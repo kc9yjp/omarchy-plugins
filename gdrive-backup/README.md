@@ -28,13 +28,6 @@ configured (`rclone config`) — this plugin doesn't set one up for you.
   timestamps, transfer summary) is written to `status.json`. A `flock` on
   `sync.lock` there prevents overlapping runs (a manual click while the
   timer is mid-run is a no-op, not a second sync).
-- Before each sync, it walks the source tree for git repos (anything with a
-  `.git` dir) and writes a `.gdrive-backup-git-info` file into each one with
-  its origin remote URL and current branch — since `.git/**` itself is
-  excluded from the mirror, this is the only record of what a project
-  directory was once it's restored from a plain working-tree copy. The file
-  is added to that repo's `.git/info/exclude` so it doesn't show up in
-  `git status`.
 - **`gdrive-backup`** (the bar widget) only reads that state — it never
   starts a sync itself. Icon is Nerd Font `cloud_upload`,  U+F0EE:
   - **syncing** — icon + live percentage (e.g. ` 42%`), normal color,
@@ -85,14 +78,31 @@ excluded:
 ## Configuration
 
 Edit `gdrive-backup.exclude` (symlinked, so it's live — no reinstall
-needed) to change what's skipped. Defaults exclude all top-level dotfiles
-and dotdirs (`.config`, `.cache`, `.ssh`, `.mozilla`, `.bashrc`, etc. —
-anchored to `$HOME` itself, so a nested repo's `.git` isn't caught by this
-rule), `Downloads/**`, `.git`/`node_modules`/`venv`/`__pycache__` anywhere
-in the tree, and large binary blobs (`*.iso`, `*.img`, `*.qcow2`). This is
-a deliberately narrow default — only non-hidden folders like `Documents`,
-`Pictures`, and project directories get backed up. Comment out `/.*` and
-`/.*/**` if you want dotfiles included too.
+needed) to change what's skipped. Despite the name it's a full rclone
+*filter* file (`+`/`-` rules, first match wins — see
+https://rclone.org/filtering/), not a plain exclude list. Defaults exclude
+all top-level dotfiles and dotdirs (`.config`, `.cache`, `.ssh`, `.mozilla`,
+`.bashrc`, etc. — anchored to `$HOME` itself, so a nested repo's `.git`
+isn't caught by this rule), `Downloads/**`,
+`.git`/`node_modules`/`venv`/`__pycache__` anywhere in the tree, and large
+binary blobs (`*.iso`, `*.img`, `*.qcow2`). This is a deliberately narrow
+default — only non-hidden folders like `Documents`, `Pictures`, and project
+directories get backed up.
+
+Two exceptions are carved back in ahead of the blanket dotdir exclusion:
+`.config/omarchy/` and `.config/hypr/` — small, plain-text, no secrets, and
+exactly what you'd want on hand to reconfigure a new machine (bar layout,
+theme/plugin choices, Hyprland bindings/monitors/autostart). Add more
+dotdirs the same way, with a `+ /path/to/dir/**` line *above* the `- /.*`
+block — but check each one for secrets/tokens first (most, like `.ssh`,
+`.mozilla`, `.gnupg`, and browser profiles, should stay excluded). Comment
+out `- /.*` and `- /.*/**` entirely if you want all dotfiles included.
+
+`~/.dotfiles/` is carved back in too, for configs managed with
+[`omadot`](../omadot/). A stowed config's `~/.config/<app>` path is only a
+symlink, and rclone skips symlinks, so the real files are backed up from
+`~/.dotfiles` instead. Everything you `omadot get` gets uploaded, so the
+same secrets check applies.
 
 Override the source directory, remote destination, or exclude file by
 creating `~/.config/omarchy/bar/scripts/gdrive-backup.env` (picked up by

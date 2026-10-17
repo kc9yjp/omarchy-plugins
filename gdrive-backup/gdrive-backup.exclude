@@ -1,26 +1,46 @@
-# rclone exclude patterns for gdrive-backup, relative to the sync source
-# (GDRIVE_BACKUP_SOURCE, $HOME by default). One pattern per line; rclone
-# glob syntax: https://rclone.org/filtering/
+# rclone filter rules for gdrive-backup, relative to the sync source
+# (GDRIVE_BACKUP_SOURCE, $HOME by default). This is a full filter file, not
+# a plain exclude list: "+" includes, "-" excludes, first matching rule
+# wins top-to-bottom, and anything matching no rule is included by default.
+# rclone filter syntax: https://rclone.org/filtering/
 #
 # Edit this file freely — it's live (symlinked, not copied) once installed.
 
-# Top-level dotfiles/dotdirs (.config, .cache, .mozilla, .ssh, .bashrc, …)
-# — app config, caches, and credentials, not treated as backup data here.
-# Anchored to the source root (leading /), so nested repo dirs like
-# Projects/foo/.git are untouched by this and handled below instead.
-/.*
-/.*/**
+# Carve-outs from the dotfile exclusion below: Omarchy and Hyprland user
+# config. Small, plain text, no secrets — checked by hand before adding
+# these — and it's exactly what you'd want on hand to reconfigure a new
+# machine (bar layout in shell.json, theme/plugin choices, Hyprland
+# bindings/monitors/autostart). Re-check for secrets before adding more
+# dotdirs this way; most (.ssh, .mozilla, .gnupg, credential caches) should
+# stay excluded.
++ /.config/omarchy/**
++ /.config/hypr/**
+
+# omadot's package store (see ../omadot/). Once a config is stowed, its
+# ~/.config/<app> path is just a symlink, and rclone skips symlinks without
+# -L/--links. The carve-outs above stop catching it, so the real files are
+# backed up from here instead. Anything moved in with `omadot get` gets
+# uploaded, so check each package for secrets before adding it.
++ /.dotfiles/**
+
+# Top-level dotfiles/dotdirs (.config, .cache, .ssh, .mozilla, .bashrc, …)
+# — app config, caches, and credentials, not treated as backup data here
+# (aside from the carve-outs above). Anchored to the source root (leading /),
+# so nested repo dirs like Projects/foo/.git are untouched by this and
+# handled below instead.
+- /.*
+- /.*/**
 
 # Regenerable build/dependency junk, wherever it turns up in the tree
-.git/**
-node_modules/**
-venv/**
-__pycache__/**
+- .git/**
+- node_modules/**
+- venv/**
+- __pycache__/**
 
 # Skipped by request — often just re-fetchable clutter
-Downloads/**
+- Downloads/**
 
 # Large binary blobs not worth mirroring to Drive
-*.iso
-*.img
-*.qcow2
+- *.iso
+- *.img
+- *.qcow2
