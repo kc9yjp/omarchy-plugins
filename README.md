@@ -89,17 +89,6 @@ restored `~/.config/omarchy/bar/scripts/*` symlinks are absolute paths into
    they print if you restored `omarchy` in step 5, because the layout is
    already there.
 
-7. **Enable the first-party plugins:** `./enable-first-party-plugins.sh`
-   turns on every built-in Omarchy plugin that's enabled on the main
-   machine. It skips ones already on and never disables anything. To
-   refresh its list after changing plugins here, run
-   `omarchy plugin list --json | jq -r '.[] | select(.firstParty and .enabled and .canDisable) | .id'`.
-
-8. **Install the third-party plugins:** `./install-third-party-plugins.sh`
-   clones and enables each one with `omarchy plugin add`. If restoring
-   `omarchy` in step 5 already brought a plugin's folder along, it only
-   enables it. Add new ones to the `id=git-url` list in the script.
-
 ## Adding a new plugin
 
 1. `mkdir <name> && cd <name>`
