@@ -40,21 +40,9 @@ also scoops up browser profiles, caches, and app credentials.
 
 ## Restoring on another machine
 
-1. Pull the old machine's backup down from Drive. Backups are namespaced
-   by hostname:
-
-   ```bash
-   rclone copy gdrive-boss:home-backup/<old-hostname>/.dotfiles ~/.dotfiles
-   ```
-
-2. Install omadot and stow (above).
-3. Restore just the pieces you want. Stow refuses to overwrite a real
-   directory, so move the new machine's default config aside first:
-
-   ```bash
-   mv ~/.config/hypr ~/.config/hypr.bak.$(date +%s)
-   omadot put hypr
-   ```
+See [Setting up a new machine](../README.md#setting-up-a-new-machine) in
+the top-level README. It covers rclone setup, pulling `~/.dotfiles` down
+from Drive, and `omadot put` for each package you want.
 
 ## Caveats
 
