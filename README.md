@@ -27,9 +27,6 @@ hot-reload) — no separate copy step.
 - [`gdrive-backup`](gdrive-backup/) — hourly `rclone` mirror of the home
   directory to Google Drive, with a bar widget showing sync status
   (up to date / syncing / stale / error) and click-to-sync-now.
-- [`omadot`](omadot/) — installs omadot (GNU Stow wrapper) to manage
-  configs as per-app packages in `~/.dotfiles`, backed up by
-  `gdrive-backup` and restorable one at a time on another machine.
 
 ## Setting up a new machine
 
@@ -55,22 +52,12 @@ restored `~/.config/omarchy/bar/scripts/*` symlinks are absolute paths into
 
 3. **Pull the old machine's configs down.** Backups live under
    `home-backup/<hostname>`. List them with `rclone lsd gdrive-boss:home-backup`
-   and use the old machine's hostname:
+   and use the old machine's hostname. Move each fresh default aside first:
 
    ```bash
-   rclone copy gdrive-boss:home-backup/<old-hostname>/.dotfiles ~/.dotfiles
-   ```
-
-4. **Install omadot and stow:** `~/Work/omarchy-plugins/omadot/install.sh`
-
-5. **Restore the configs you want.** `omadot list` shows what's
-   available. Stow won't overwrite a real directory, so move each fresh
-   default aside first:
-
-   ```bash
-   for p in omarchy hypr ghostty nvim git starship.toml; do
-     [[ -e ~/.config/$p && ! -L ~/.config/$p ]] && mv ~/.config/$p ~/.config/$p.bak.$(date +%s)
-     omadot put $p
+   for p in omarchy hypr; do
+     [[ -e ~/.config/$p ]] && mv ~/.config/$p ~/.config/$p.bak.$(date +%s)
+     rclone copy gdrive-boss:home-backup/<old-hostname>/.config/$p ~/.config/$p
    done
    hyprctl reload
    ```
@@ -83,10 +70,10 @@ restored `~/.config/omarchy/bar/scripts/*` symlinks are absolute paths into
    names and resolutions for the new hardware (`hyprctl monitors`), or
    copy the new machine's defaults back from the `.bak` directory.
 
-6. **Reinstall the plugins:** `gdrive-backup/install.sh` (enables the
+4. **Reinstall the plugins:** `gdrive-backup/install.sh` (enables the
    hourly backup for *this* machine's hostname) and `disk-usage/install.sh`.
    Each one relinks its scripts in place. Skip the `shell.json` snippets
-   they print if you restored `omarchy` in step 5, because the layout is
+   they print if you restored `omarchy` in step 3, because the layout is
    already there.
 
 ## Adding a new plugin

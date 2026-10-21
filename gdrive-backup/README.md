@@ -98,12 +98,6 @@ block — but check each one for secrets/tokens first (most, like `.ssh`,
 `.mozilla`, `.gnupg`, and browser profiles, should stay excluded). Comment
 out `- /.*` and `- /.*/**` entirely if you want all dotfiles included.
 
-`~/.dotfiles/` is carved back in too, for configs managed with
-[`omadot`](../omadot/). A stowed config's `~/.config/<app>` path is only a
-symlink, and rclone skips symlinks, so the real files are backed up from
-`~/.dotfiles` instead. Everything you `omadot get` gets uploaded, so the
-same secrets check applies.
-
 Override the source directory, remote destination, or exclude file by
 creating `~/.config/omarchy/bar/scripts/gdrive-backup.env` (picked up by
 the systemd service via `EnvironmentFile=`):

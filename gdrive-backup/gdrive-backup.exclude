@@ -16,13 +16,6 @@
 + /.config/omarchy/**
 + /.config/hypr/**
 
-# omadot's package store (see ../omadot/). Once a config is stowed, its
-# ~/.config/<app> path is just a symlink, and rclone skips symlinks without
-# -L/--links. The carve-outs above stop catching it, so the real files are
-# backed up from here instead. Anything moved in with `omadot get` gets
-# uploaded, so check each package for secrets before adding it.
-+ /.dotfiles/**
-
 # Top-level dotfiles/dotdirs (.config, .cache, .ssh, .mozilla, .bashrc, …)
 # — app config, caches, and credentials, not treated as backup data here
 # (aside from the carve-outs above). Anchored to the source root (leading /),
