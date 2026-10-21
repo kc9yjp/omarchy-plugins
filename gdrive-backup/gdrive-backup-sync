@@ -54,9 +54,12 @@ sanitize() {
 
 # Append straight to live_log (not buffered in a variable) so the widget
 # can tail it for progress while a long sync is still running.
+# --one-file-system keeps rclone out of mounts under $HOME (e.g. rclone FUSE
+# mounts of cloud remotes, possibly of the backup destination itself).
 : >"$live_log"
 rclone sync "$source_dir" "$remote" \
     --filter-from "$exclude_file" \
+    --one-file-system \
     --stats 5s --stats-one-line -v >>"$live_log" 2>&1
 rclone_exit=$?
 
